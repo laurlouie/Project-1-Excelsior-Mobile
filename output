@@ -1,0 +1,137 @@
+/*
+Project #1: Excelsior Mobile
+Lauren Louie
+*/
+USE [22WQ_BUAN4210_Lloyd_ExcelsiorMobile]
+-- 1 --
+-- A
+SELECT CONCAT(Subscriber.FirstName, ' ', Subscriber.LastName) AS 'Customer Full 
+Name', LastMonthUsage."Minutes" AS 'Minute Usage', LastMonthUsage.DataInMB AS 'Data
+Usage', LastMonthUsage.Texts AS 'Text Usage', Bill.Total AS 'Total Bill'
+FROM Subscriber, LastMonthUsage, Bill
+WHERE Subscriber."MIN" = LastMonthUsage."MIN"
+AND Subscriber."MIN" = Bill."MIN"
+ORDER BY  Subscriber.FirstName, Subscriber.LastName, LastMonthUsage."Minutes", 
+LastMonthUsage.DataInMB, LastMonthUsage.Texts, Bill.Total;
+-- B
+SELECT Subscriber.City, AVG(LastMonthUsage."Minutes") AS 'Average Minutes', 
+AVG(LastMonthUsage.DataInMB) AS 'Average Data Usage (MB)', 
+AVG(LastMonthUsage.Texts) AS 'Average Texts', AVG(Bill.Total) AS 'Average Bill 
+Total'
+FROM Subscriber, LastMonthUsage, Bill
+WHERE Subscriber."MIN" = LastMonthUsage."MIN" 
+AND Subscriber."MIN" = Bill."MIN"
+GROUP BY City
+ORDER BY City;
+-- C
+SELECT Subscriber.City, SUM(LastMonthUsage."Minutes") AS 'Sum of Minutes', 
+SUM(LastMonthUsage.DataInMB) AS 'Sum of Data Usage (MB)', SUM(LastMonthUsage.Texts)
+AS 'Sum of Texts', SUM(Bill.Total) AS 'Total Bill'
+FROM Subscriber,LastMonthUsage, Bill
+WHERE Subscriber."MIN" = LastMonthUsage."MIN" 
+AND Subscriber."MIN" = Bill."MIN"
+GROUP BY City
+ORDER BY City;
+-- D
+SELECT Subscriber.PlanName AS 'Plan Name', AVG(LastMonthUsage."Minutes") AS 
+'Average Minutes', AVG(LastMonthUsage.DataInMB) AS 'Average Data Usage (MB)', 
+AVG(LastMonthUsage.Texts) AS 'Average Texts', AVG(Bill.Total) AS 'Average Bill 
+Total'
+FROM Subscriber,LastMonthUsage, Bill
+WHERE Subscriber."MIN" = LastMonthUsage."MIN" 
+AND Subscriber."MIN" = Bill."MIN"
+GROUP BY PlanName
+ORDER BY PlanName; 
+-- E
+SELECT Subscriber.PlanName AS 'Plan Name', SUM(LastMonthUsage."Minutes") AS 'Sum of
+Minutes', SUM(LastMonthUsage.DataInMB) AS 'Sum of Data Usage (MB)', 
+SUM(LastMonthUsage.Texts) AS 'Sum of Texts', SUM(Bill.Total) AS 'Total Bill'
+FROM Subscriber,LastMonthUsage, Bill
+WHERE Subscriber."MIN" = LastMonthUsage."MIN" 
+AND Subscriber."MIN" = Bill."MIN"
+GROUP BY PlanName
+ORDER BY PlanName; 
+--Without Visualizations
+--- 1 --
+-- A
+SELECT TOP 2 City, COUNT(City) AS 'Most Number of Customers in City'
+FROM Subscriber
+GROUP BY City
+ORDER BY 'Most Number of Customers in City' DESC;
+-- B
+SELECT TOP 3 City, COUNT(FirstName) AS 'Least Number of Customers in City'
+FROM Subscriber
+GROUP BY City
+ORDER BY 'Least Number of Customers in City' ASC;
+-- C
+SELECT TOP 1 PlanName AS 'Plan Name', COUNT(PlanName) AS 'Number of Customers Using
+Plan'
+FROM Subscriber
+GROUP BY PlanName
+ORDER BY 'Number of Customers Using Plan' ASC;
+-- 2 --
+-- A
+SELECT Type, COUNT(Type) AS 'Type Used By Customer'
+FROM Device
+GROUP BY Type
+ORDER BY 'Type Used By Customer' DESC;
+-- B
+SELECT CONCAT(FirstName, ' ', LastName) AS 'Customer Full Name'
+FROM Subscriber
+WHERE MDN IN
+(SELECT DirNums.MDN
+FROM DirNums
+WHERE IMEI IN
+(SELECT Device.IMEI
+FROM Device
+WHERE "Type" = 'Apple'))
+ORDER BY 'Customer Full Name' ASC;
+-- C
+SELECT CONCAT(Subscriber.FirstName, ' ',  Subscriber.LastName) AS 'Customer Full 
+Name', YearReleased AS 'Year Released'
+FROM Subscriber, Device, DirNums
+WHERE Subscriber."MDN" = DirNums."MDN"
+AND DirNums.IMEI = Device.IMEI AND YearReleased < 2018
+ORDER BY 'Customer Full Name' ;
+-- 3 --
+-- A
+SELECT TOP 1 SUM(DataInMB) AS 'Max Data Usage', MPlan."Data" as 'Data Plan', 
+Subscriber.City
+FROM Subscriber 
+JOIN MPlan
+ON Subscriber.PlanName = MPlan.PlanName
+JOIN LastMonthUsage
+ON LastMonthUsage."MIN" = Subscriber."MIN"
+WHERE MPlan."Data" NOT LIKE 'Unlimited'
+GROUP BY MPlan."Data", Subscriber.City
+ORDER BY 'Max Data Usage' DESC;
+-- 4 --
+-- A
+SELECT TOP 1 CONCAT(Subscriber.FirstName, ' ', Subscriber.LastName) AS 'Customer 
+Full Name' 
+FROM Subscriber, Bill
+WHERE Subscriber."MIN" = Bill."MIN"
+ORDER BY Total DESC;
+-- B
+SELECT TOP 1 PlanName AS 'Plan Name', Total
+FROM Bill as B, Subscriber as S
+WHERE B."MIN" = S."MIN"
+ORDER BY Total DESC;
+-- 5 --
+-- A
+SELECT TOP 1 LEFT(MDN,3) AS 'Area Code', Minutes
+FROM Subscriber as S, LastMonthUsage as L
+WHERE S."MIN" = L."MIN"
+ORDER BY Minutes DESC;
+-- B
+SELECT DISTINCT Subscriber.City
+FROM Subscriber, LastMonthUsage
+WHERE Subscriber."MIN" = LastMonthUsage."MIN"
+AND Subscriber.City IN
+(SELECT DISTINCT Subscriber.City
+FROM Subscriber, LastMonthUsage
+WHERE Subscriber."MIN" = LastMonthUsage."MIN"
+GROUP BY Subscriber.City, LastMonthUsage."Minutes"
+HAVING LastMonthUsage."Minutes" > 700)
+GROUP BY Subscriber.City, LastMonthUsage."Minutes"
+HAVING LastMonthUsage."Minutes" < 200;
